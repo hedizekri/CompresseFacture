@@ -2,48 +2,46 @@
 echo === Compresseur de Factures - Build ===
 echo.
 
-REM Check if Python is installed
-python --version >nul 2>&1
+REM Check Python version
+python --version
 if %errorlevel% neq 0 (
-    echo ERREUR: Python n'est pas installe.
-    echo Installez Python depuis https://www.python.org/downloads/
-    echo IMPORTANT: Cochez "Add Python to PATH" lors de l'installation!
+    echo ERREUR: Python n'est pas trouve.
     pause
     exit /b 1
 )
 
-echo Python trouve. Installation des dependances...
 echo.
+echo Mise a jour de pip...
+python -m pip install --upgrade pip setuptools wheel
 
-REM Upgrade pip first
-python -m pip install --upgrade pip
-
-REM Install dependencies directly (no venv to avoid path issues)
-python -m pip install pypdf==4.0.1 Pillow==10.1.0 pyinstaller==6.3.0
+echo.
+echo Installation de Pillow (binaire pre-compile)...
+python -m pip install --only-binary :all: Pillow
 
 if %errorlevel% neq 0 (
     echo.
-    echo ERREUR: Installation des dependances echouee.
-    echo Essayez d'executer ce fichier en tant qu'administrateur.
-    pause
-    exit /b 1
+    echo Tentative alternative...
+    python -m pip install Pillow --prefer-binary
 )
+
+echo.
+echo Installation des autres dependances...
+python -m pip install pypdf pyinstaller
 
 echo.
 echo Creation de l'executable...
 python -m PyInstaller --onefile --windowed --name "CompresseurFactures" app.py
 
-if %errorlevel% neq 0 (
+if exist "dist\CompresseurFactures.exe" (
     echo.
-    echo ERREUR: Creation de l'executable echouee.
-    pause
-    exit /b 1
+    echo ============================================
+    echo   BUILD TERMINE!
+    echo   L'executable est: dist\CompresseurFactures.exe
+    echo ============================================
+) else (
+    echo.
+    echo ERREUR: L'executable n'a pas ete cree.
 )
 
-echo.
-echo ============================================
-echo   BUILD TERMINE!
-echo   L'executable est: dist\CompresseurFactures.exe
-echo ============================================
 echo.
 pause
